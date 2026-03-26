@@ -14,6 +14,9 @@ static GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> epd(GxEPD
 static bool g_halted = false;
 static Menu* g_current = nullptr;
 static int16_t g_line_h = 20;
+static ScreenMode g_mode = ScreenMode::MENU;
+static std::string g_page_title;
+static std::string g_page_body;
 Menu main_menu;
 Menu books_menu;
 Menu settings_menu;
@@ -58,32 +61,35 @@ void ui_init() {
 
 bool ui_halted() { return g_halted; }
 
-void render_current_menu() {
-  if (!g_current) return;
+void render_current_menu(bool full_refresh) {
+  if (g_mode != ScreenMode::MENU || !g_current) return;
   epd.fillScreen(GxEPD_WHITE);
   int16_t y = MARGIN_Y;
   for (size_t i = 0; i < g_current->items.size(); i++) {
     std::vector<std::string> lines = wrap_text(g_current->items[i].text, EPD_W - MARGIN_X * 2);
+    bool selected = (int)i == g_current->selected_index;
+    if (selected) {
+      int16_t block_h = (int16_t)lines.size() * g_line_h + 4;
+      epd.fillRect(MARGIN_X - 2, y - 2, EPD_W - MARGIN_X * 2 + 4, block_h, GxEPD_BLACK);
+    }
     for (const std::string& line : lines) {
       int16_t tbx, tby;
       uint16_t tbw, tbh;
       epd.getTextBounds(line.c_str(), 0, 0, &tbx, &tby, &tbw, &tbh);
-      if ((int)i == g_current->selected_index) {
-        epd.fillRect(MARGIN_X - 2, y - 2, tbw + 6, tbh + 4, GxEPD_BLACK);
-        epd.setTextColor(GxEPD_WHITE);
-      } else {
-        epd.setTextColor(GxEPD_BLACK);
-      }
+      epd.setTextColor(selected ? GxEPD_WHITE : GxEPD_BLACK);
       epd.setCursor(MARGIN_X + 2, y + (int16_t)tbh - 2);
       epd.print(line.c_str());
       y += g_line_h;
     }
     y += 4;
   }
-  epd.display();
+  epd.display(!full_refresh);
 }
 
 void display_page(const std::string& title, const std::string& body) {
+  g_page_title = title;
+  g_page_body = body;
+  g_mode = ScreenMode::PAGE;
   epd.fillScreen(GxEPD_WHITE);
   int16_t y = MARGIN_Y;
   std::vector<std::string> title_lines = wrap_text(title, EPD_W - MARGIN_X * 2);
@@ -108,7 +114,7 @@ void display_page(const std::string& title, const std::string& body) {
     epd.print(body_lines[i].c_str());
     y += g_line_h;
   }
-  epd.display();
+  epd.display(false);
 }
 
 void menu_move_up() {
@@ -133,6 +139,10 @@ void menu_enter() {
 }
 
 void menu_back() {
+  if (g_mode == ScreenMode::PAGE) {
+    g_mode = ScreenMode::MENU;
+    return;
+  }
   if (g_current && g_current->parent) g_current = g_current->parent;
 }
 

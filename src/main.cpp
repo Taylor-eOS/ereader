@@ -34,7 +34,7 @@ void setup() {
   SPI.begin(39, -1, 40, 41);
   ui_init();
   setup_menus();
-  render_current_menu();
+  render_current_menu(true);
 }
 
 void loop() {
@@ -46,19 +46,19 @@ void loop() {
   read_buttons(up, down, enter, back);
   if (up) {
     menu_move_up();
-    render_current_menu();
+    render_current_menu(false);
   }
   if (down) {
     menu_move_down();
-    render_current_menu();
+    render_current_menu(false);
   }
   if (enter) {
     menu_enter();
-    render_current_menu();
+    render_current_menu(true);
   }
   if (back) {
     menu_back();
-    render_current_menu();
+    render_current_menu(true);
   }
   delay(60);
 }
