@@ -1,18 +1,20 @@
 #include "display.h"
+#include "storage.h"
 #include <SPI.h>
-#include <Fonts/FreeSerif9pt7b.h>
+#include <Fonts/FreeSerif12pt7b.h>
 #include <GxEPD2_BW.h>
 
 static GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> epd(GxEPD2_420_GDEY042T81(EPD_PIN_CS, EPD_PIN_DC, EPD_PIN_RST, EPD_PIN_BUSY));
 
 static int16_t lineHeight = 18;
+static char chunkBuf[CHUNK_SIZE];
 
 void displayInit() {
     SPI.begin(SPI_SCK, -1, SPI_MOSI, EPD_PIN_CS);
     epd.init(115200, true, 50, false);
     epd.setRotation(0);
     epd.setFullWindow();
-    epd.setFont(&FreeSerif9pt7b);
+    epd.setFont(&FreeSerif12pt7b);
     int16_t tbx, tby;
     uint16_t tbw, tbh;
     epd.getTextBounds("Ag", 0, 0, &tbx, &tby, &tbw, &tbh);
@@ -22,6 +24,12 @@ void displayInit() {
 static void drawMenu(const Book* books, int bookCount, int selectedIndex) {
     int menuCount = bookCount + 1;
     int y = MARGIN_Y + lineHeight;
+    if (bookCount == 0) {
+        epd.setTextColor(GxEPD_BLACK);
+        epd.setCursor(MARGIN_X, y);
+        epd.print("No books found.");
+        y += lineHeight + 10;
+    }
     for (int i = 0; i < bookCount; i++) {
         int boxY = y - lineHeight + 4;
         int boxH = lineHeight + 6;
@@ -52,10 +60,8 @@ static void drawReading(const Book* books, int openBookIndex, int textOffset) {
     epd.setTextColor(GxEPD_BLACK);
     epd.setTextWrap(true);
     epd.setCursor(MARGIN_X, MARGIN_Y + lineHeight);
-    const char* text = books[openBookIndex].text;
-    int textLen = strlen(text);
-    int offset = textOffset < textLen ? textOffset : textLen;
-    epd.print(text + offset);
+    storageReadBookChunk(&books[openBookIndex], textOffset, chunkBuf, sizeof(chunkBuf));
+    epd.print(chunkBuf);
 }
 
 static void drawSettings() {

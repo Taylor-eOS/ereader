@@ -8,5 +8,5 @@ enum Screen {
 
 struct Book {
     const char* title;
-    const char* text;
+    const char* path;
 };
