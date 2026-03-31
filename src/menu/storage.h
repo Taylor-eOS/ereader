@@ -7,3 +7,4 @@
 bool storageInit();
 int storageGetBooks(Book* out, int maxCount);
 int storageReadBookChunk(const Book* book, int offset, char* buf, int bufSize);
+void safeLog(const char* format, ...);

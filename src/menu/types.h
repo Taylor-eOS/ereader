@@ -9,4 +9,5 @@ enum Screen {
 struct Book {
     const char* title;
     const char* path;
+    int size;
 };

@@ -9,7 +9,7 @@ static int bookCount = 0;
 static int menuCount = 0;
 static Screen currentScreen = SCREEN_MENU;
 static int selectedIndex = 0;
-static int openBookIndex = 0;
+static int openBookIndex = -1;
 static bool needsRedraw = true;
 static int textOffset = 0;
 
@@ -20,11 +20,10 @@ void setup() {
     bookCount = storageGetBooks(books, MAX_BOOKS);
     menuCount = bookCount + 1;
     displayInit();
-    redrawScreen(currentScreen, books, bookCount, selectedIndex, openBookIndex, textOffset);
 }
 
 void loop() {
-    updateInput(currentScreen, selectedIndex, openBookIndex, textOffset, needsRedraw, menuCount);
+    updateInput(currentScreen, selectedIndex, openBookIndex, textOffset, needsRedraw, menuCount, books);
     if (needsRedraw) {
         redrawScreen(currentScreen, books, bookCount, selectedIndex, openBookIndex, textOffset);
         needsRedraw = false;

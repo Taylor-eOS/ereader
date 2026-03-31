@@ -18,7 +18,7 @@ bool buttonPressed(uint8_t pin) {
     return false;
 }
 
-void updateInput(Screen& currentScreen, int& selectedIndex, int& openBookIndex, int& textOffset, bool& needsRedraw, int menuCount) {
+void updateInput(Screen& currentScreen, int& selectedIndex, int& openBookIndex, int& textOffset, bool& needsRedraw, int menuCount, const Book* books) {
     if (currentScreen == SCREEN_MENU) {
         if (buttonPressed(BTN_UP)) {
             selectedIndex = (selectedIndex - 1 + menuCount) % menuCount;
@@ -31,21 +31,23 @@ void updateInput(Screen& currentScreen, int& selectedIndex, int& openBookIndex, 
         if (buttonPressed(BTN_SELECT)) {
             if (selectedIndex == menuCount - 1) {
                 currentScreen = SCREEN_SETTINGS;
-                needsRedraw = true;
             } else {
                 openBookIndex = selectedIndex;
                 textOffset = 0;
                 currentScreen = SCREEN_READING;
-                needsRedraw = true;
             }
+            needsRedraw = true;
         }
     } else if (currentScreen == SCREEN_READING) {
         if (buttonPressed(BTN_DOWN)) {
-            textOffset += 300;
-            needsRedraw = true;
+            int next = textOffset + PAGE_STEP;
+            if (next < books[openBookIndex].size) {
+                textOffset = next;
+                needsRedraw = true;
+            }
         }
         if (buttonPressed(BTN_UP)) {
-            textOffset -= 300;
+            textOffset -= PAGE_STEP;
             if (textOffset < 0) textOffset = 0;
             needsRedraw = true;
         }
