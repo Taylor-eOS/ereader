@@ -16,10 +16,10 @@ static int textOffset = 0;
 void setup() {
     Serial.begin(115200);
     inputInit();
-    displayInit();
     storageInit();
     bookCount = storageGetBooks(books, MAX_BOOKS);
     menuCount = bookCount + 1;
+    displayInit();
     redrawScreen(currentScreen, books, bookCount, selectedIndex, openBookIndex, textOffset);
 }
 

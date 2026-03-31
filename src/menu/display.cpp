@@ -3,14 +3,12 @@
 #include <Fonts/FreeSerif9pt7b.h>
 #include <GxEPD2_BW.h>
 
-static SPIClass ePaperSpi(2);
 static GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT> epd(GxEPD2_420_GDEY042T81(EPD_PIN_CS, EPD_PIN_DC, EPD_PIN_RST, EPD_PIN_BUSY));
 
 static int16_t lineHeight = 18;
 
 void displayInit() {
-    ePaperSpi.begin(SPI_SCK, -1, SPI_MOSI, EPD_PIN_CS);
-    epd.epd2.selectSPI(ePaperSpi, SPISettings(4000000, MSBFIRST, SPI_MODE0));
+    SPI.begin(SPI_SCK, -1, SPI_MOSI, EPD_PIN_CS);
     epd.init(115200, true, 50, false);
     epd.setRotation(0);
     epd.setFullWindow();
