@@ -1,26 +1,21 @@
 #include "storage.h"
-#include <SD.h>
-#include <SPI.h>
+#include <SD_MMC.h>
 
-#define SD_PIN_SCK  12
-#define SD_PIN_MOSI 11
-#define SD_PIN_MISO 13
-#define SD_PIN_CS   10
-
-static SPIClass sdSpi(1);
 static char titleBufs[MAX_BOOKS][64];
 static char* textBufs[MAX_BOOKS] = {nullptr};
 
 bool storageInit() {
-    sdSpi.begin(SD_PIN_SCK, SD_PIN_MISO, SD_PIN_MOSI, SD_PIN_CS);
-    bool success = SD.begin(SD_PIN_CS, sdSpi);
+    esp_err_t err = SD_MMC.setPins(12, 11, 13);
+    Serial.printf("setPins: %d (%s)\n", err, esp_err_to_name(err));
+    bool success = SD_MMC.begin("/sdmc", true, false, SDMMC_FREQ_DEFAULT);
     Serial.println(success ? "SD card initialized" : "SD card initialization failed");
+    Serial.printf("Card type: %d\n", SD_MMC.cardType());
     return success;
 }
 
 int storageGetBooks(Book* out, int maxCount) {
-    Serial.printf("Used bytes: %llu\n", SD.usedBytes());
-    File root = SD.open("/");
+    Serial.printf("Used bytes: %llu\n", SD_MMC.usedBytes());
+    File root = SD_MMC.open("/");
     Serial.printf("root: %s isDir: %d\n", root ? "OK" : "FAIL", root ? (int)root.isDirectory() : -1);
     if (!root || !root.isDirectory()) { root.close(); return 0; }
     root.rewindDirectory();
