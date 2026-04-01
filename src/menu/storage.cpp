@@ -1,20 +1,9 @@
 #include "storage.h"
+#include "utils.h"
 #include <SD_MMC.h>
-#include <stdarg.h>
 
 static char titleBufs[MAX_BOOKS][64];
 static char pathBufs[MAX_BOOKS][128];
-
-void safeLog(const char* format, ...) {
-    if (Serial && Serial.availableForWrite() > 32) {
-        va_list args;
-        va_start(args, format);
-        char buf[256];
-        vsnprintf(buf, sizeof(buf), format, args);
-        Serial.print(buf);
-        va_end(args);
-    }
-}
 
 bool storageInit() {
     esp_err_t err = SD_MMC.setPins(12, 11, 13);
