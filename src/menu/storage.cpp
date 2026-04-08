@@ -1,5 +1,4 @@
 #include "storage.h"
-#include "SafeSerial.h"
 #include <SD_MMC.h>
 
 static char titleBufs[MAX_BOOKS][64];
@@ -7,10 +6,10 @@ static char pathBufs[MAX_BOOKS][128];
 
 bool storageInit() {
     esp_err_t err = SD_MMC.setPins(12, 11, 13);
-    SAFE_SERIAL.printf("setPins: %d (%s)\n", err, esp_err_to_name(err));
+    Serial.printf("setPins: %d (%s)\n", err, esp_err_to_name(err));
     bool success = SD_MMC.begin("/sdmc", true, false, SDMMC_FREQ_PROBING);
-    SAFE_SERIAL.printf(success ? "SD card initialized\n" : "SD card initialization failed\n");
-    SAFE_SERIAL.printf("Card type: %d\n", SD_MMC.cardType());
+    Serial.printf(success ? "SD card initialized\n" : "SD card initialization failed\n");
+    Serial.printf("Card type: %d\n", SD_MMC.cardType());
     return success;
 }
 
@@ -22,9 +21,7 @@ static void filenameToTitle(const char* filename, char* out, int outSize) {
 }
 
 int storageGetBooks(Book* out, int maxCount) {
-    SAFE_SERIAL.printf("Used bytes: %llu\n", SD_MMC.usedBytes());
     File root = SD_MMC.open("/");
-    SAFE_SERIAL.printf("root: %s isDir: %d\n", root ? "OK" : "FAIL", root ? (int)root.isDirectory() : -1);
     if (!root || !root.isDirectory()) {
         if (root) root.close();
         return 0;
@@ -34,7 +31,6 @@ int storageGetBooks(Book* out, int maxCount) {
     while (count < maxCount) {
         File f = root.openNextFile();
         if (!f) break;
-        SAFE_SERIAL.printf("Found: %s (%d bytes)\n", f.name(), (int)f.size());
         if (f.isDirectory() || f.size() == 0) {
             f.close();
             continue;
@@ -45,11 +41,10 @@ int storageGetBooks(Book* out, int maxCount) {
         out[count].path = pathBufs[count];
         out[count].size = (int)f.size();
         f.close();
-        SAFE_SERIAL.printf("  Loaded: %s -> %s (%d bytes)\n", titleBufs[count], pathBufs[count], out[count].size);
         count++;
     }
     root.close();
-    SAFE_SERIAL.printf("Books loaded: %d\n", count);
+    Serial.printf("Books loaded: %d\n", count);
     return count;
 }
 
