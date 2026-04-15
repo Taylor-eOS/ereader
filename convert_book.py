@@ -11,6 +11,7 @@ DIRECT_REPLACEMENTS = {"\r\n": "\n", "\r": "\n", "\t": " ", "\u00A0": " ", "\u20
 SYMBOL_TO_ID = {char: idx for idx, char in enumerate(ALLOWED_CHARS)}
 ALLOWED_SET = set(ALLOWED_CHARS)
 PRECOMPOSED = set("æøåäöüÆØÅÄÖÜß")
+ENCODING = "latin-1"
 
 def normalize_text(text: str) -> str:
     for src, dst in DIRECT_REPLACEMENTS.items():
@@ -39,9 +40,18 @@ def collapse_whitespace(text: str) -> str:
     return text.strip() + "\n"
 
 def filter_text(text: str):
+    cp1252_map = {'\x80': '€', '\x82': ',', '\x83': 'f', '\x84': '"', '\x85': '...', '\x86': '+', '\x87': '#', '\x88': '^', '\x89': '%', '\x8A': 'S', '\x8B': '<', '\x8C': 'OE', '\x8E': 'Z', '\x91': "'", '\x92': "'", '\x93': '"', '\x94': '"', '\x95': '*', '\x96': '-', '\x97': '-', '\x98': '~', '\x99': 'TM', '\x9A': 's', '\x9B': '>', '\x9C': 'oe', '\x9E': 'z', '\x9F': 'Y',}
     cleaned_chars = []
     unknown_counter = Counter()
     for c in text:
+        if c in cp1252_map:
+            replacement = cp1252_map[c]
+            for r in replacement:
+                if r in ALLOWED_SET:
+                    cleaned_chars.append(r)
+                else:
+                    unknown_counter[r] += 1
+            continue
         if c in ALLOWED_SET:
             cleaned_chars.append(c)
         else:
@@ -52,7 +62,7 @@ def encode_symbol_stream(text: str) -> bytes:
     return bytes(SYMBOL_TO_ID[c] for c in text)
 
 def write_symbol_table(path: Path):
-    with path.open("w", encoding="utf-8") as f:
+    with path.open("w", encoding=ENCODING) as f:
         for char, idx in SYMBOL_TO_ID.items():
             printable = "\\n" if char == "\n" else char
             f.write(f"{idx:3d}  {repr(printable)}\n")
@@ -78,7 +88,7 @@ def main():
     collapsed = collapse_whitespace(normalized)
     cleaned, unknown_counter = filter_text(collapsed)
     symbol_stream = encode_symbol_stream(cleaned)
-    cleaned_path.write_text(cleaned, encoding="utf-8")
+    cleaned_path.write_text(cleaned, encoding=ENCODING)
     output_bin_path.write_bytes(symbol_stream)
     write_symbol_table(symbol_table_path)
     print(f"Input chars:    {len(raw_text)}")
