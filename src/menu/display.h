@@ -10,8 +10,7 @@
 #define SPI_MOSI     40
 #define EPD_W        400
 #define EPD_H        300
-#define MARGIN_X     12
-#define MARGIN_Y     12
 
 void displayInit();
+int displayGetLastPageSize();
 void redrawScreen(Screen currentScreen, const Book* books, int bookCount, int selectedIndex, int openBookIndex, int textOffset);

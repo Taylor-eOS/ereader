@@ -1,4 +1,5 @@
 #include "input.h"
+#include "display.h"
 
 void inputInit() {
     pinMode(BTN_UP, INPUT_PULLUP);
@@ -39,15 +40,17 @@ void updateInput(Screen& currentScreen, int& selectedIndex, int& openBookIndex, 
             needsRedraw = true;
         }
     } else if (currentScreen == SCREEN_READING) {
+        int step = displayGetLastPageSize();
+        if (step <= 0) step = PAGE_STEP;
         if (buttonPressed(BTN_DOWN)) {
-            int next = textOffset + PAGE_STEP;
+            int next = textOffset + step;
             if (next < books[openBookIndex].size) {
                 textOffset = next;
                 needsRedraw = true;
             }
         }
         if (buttonPressed(BTN_UP)) {
-            textOffset -= PAGE_STEP;
+            textOffset -= step;
             if (textOffset < 0) textOffset = 0;
             needsRedraw = true;
         }
